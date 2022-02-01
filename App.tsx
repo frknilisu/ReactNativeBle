@@ -56,10 +56,41 @@ const App = () => {
     });
   }
 
+  const connect = () => {
+    console.log("Device To Connect: ", myDevice.id);
+    myDevice.connect()
+      .then((device) => {
+        console.log("Connected: ", device.isConnected());
+        console.log(device);
+        return device.discoverAllServicesAndCharacteristics();
+      }).then((device) => {
+        console.log("services: ", device.serviceUUIDs);
+      }).catch((error) => {
+        console.log(error.message);
+      });
+  };
+
+  const connectToDevice = () => {
+    console.log("Device To Connect: ", myDevice.id);
+    bleManager.connectToDevice(myDevice.id)
+      .then((device) => {
+        console.log("Connected: ", device.isConnected());
+        console.log(device);
+        console.log("Discovering services and characteristics");
+        return device.discoverAllServicesAndCharacteristics();
+      }).then((device) => {
+        console.log("services: ", device.serviceUUIDs);
+      })
+      .catch((error) => {
+        console.log(error.message);
+      })
+  }
+
   return (
     <SafeAreaView>
       <Text style={styles.highlight}>Highlighted Text</Text>
-      <Button title="Scan" onPress={()=>scanDevices("MyBLEProfile")} />
+      <Button title="Scan" onPress={() => scanDevices("MyBLEServer")} />
+      <Button title="Connect" onPress={() => connectToDevice()} />
     </SafeAreaView>
   );
 };
