@@ -27,7 +27,12 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import { BleManager } from 'react-native-ble-plx';
+
 const App = () => {
+  
+  const bleManager = new BleManager();
+
   return (
     <SafeAreaView>
       <Text style={styles.highlight}>Highlighted Text</Text>
