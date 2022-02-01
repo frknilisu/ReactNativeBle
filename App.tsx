@@ -8,8 +8,9 @@
  * @format
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -27,15 +28,38 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
-import { BleManager } from 'react-native-ble-plx';
+import { BleManager, Device } from 'react-native-ble-plx';
 
 const App = () => {
   
+  const [myDevice, setMyDevice] = useState<Device>(null);
+  
   const bleManager = new BleManager();
+
+  const scanDevices = (deviceName: String) => {
+    bleManager.startDeviceScan(null, null, (error, device) => {
+      console.log("Scanning...");
+      console.log(device.name);
+      
+      if (error) {
+        console.log(error.message);
+        return;
+      }
+      
+      if (device.name === deviceName) {
+        console.log("Device Found: ", device);
+        bleManager.stopDeviceScan();
+        setMyDevice(device);
+        return;
+      }
+
+    });
+  }
 
   return (
     <SafeAreaView>
       <Text style={styles.highlight}>Highlighted Text</Text>
+      <Button title="Scan" onPress={()=>scanDevices("MyBLEProfile")} />
     </SafeAreaView>
   );
 };
