@@ -17,6 +17,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
@@ -40,6 +41,8 @@ const App = () => {
   const bleManager: BleManager = new BleManager();
   const [myDevice, setMyDevice] = useState<Device>();
   const [notifChar, setNotifChar] = useState<Characteristic>();
+  const [writeMsg, setWriteMessage] = useState<String>("");
+  const [readMsg, setReadMessage] = useState<String>("");
   
   const SERVICE_UUID = "a5b1194c-0d11-e0c0-50e5-c7db856efe37";
   const CHAR_UUID= "98234604-4499-8e00-79d3-44a0c5481593";
@@ -95,14 +98,14 @@ const App = () => {
       });
   }
 
-  const writeToDevice = (data: any) => {
+  const writeToDevice = (data: String) => {
     console.log("Is Connected: ", myDevice?.isConnected());
     bleManager.writeCharacteristicWithResponseForDevice(
       myDevice?.id, SERVICE_UUID, CHAR_UUID, base64.encode(data).toString('utf-8')
-    ).then(response => {
+    ).then((response) => {
       console.log(response);
     }).catch((error) => {
-      console.log('error in writing data: ', error);
+      console.log('Error in writing data: ', error);
     });
   }
 
@@ -111,9 +114,11 @@ const App = () => {
     bleManager.readCharacteristicForDevice(
       myDevice?.id, SERVICE_UUID, CHAR_UUID
     ).then((char) => {
-      console.log(base64.decode(char?.value));
+      const decodedValue = base64.decode(char?.value);
+      console.log(decodedValue);
+      setReadMessage(String(decodedValue));
     }).catch((error) => {
-      console.log('error in reading data: ', error);
+      console.log('Error in reading data: ', error);
     });
   }
 
@@ -135,15 +140,37 @@ const App = () => {
     });
   }
 
+  const disconnectDevice = () => {
+    bleManager.cancelDeviceConnection(myDevice?.id)
+      .then((results) => {
+        console.log("Disconnect device: ", results);
+      }).catch((error) => {
+        console.log("Error in disconnecting device: ", error);
+      });
+  };
+
+  const checkConnection = () => {
+    bleManager.isDeviceConnected(myDevice?.id)
+      .then((results) => {
+        console.log("Connection check: ", results);
+      }).catch((error) => {
+        console.log("Error in connection check: ", error);
+      });
+  };
+
   return (
     <SafeAreaView>
-      <Text style={styles.highlight}>Highlighted Text</Text>
       <Button title="Scan" onPress={() => scanDevices("MyBLEServer")} />
       <Button title="Connect" onPress={() => connectToDevice()} />
-      <Button title="Write" onPress={() => writeToDevice("hello")} />
+      <Button title="Write" onPress={() => writeToDevice(writeMsg)} />
       <Button title="Read" onPress={() => readFromDevice()} />
       <Button title="Subscribe" onPress={() => subscribeToDevice()} />
-      <Text style={{fontSize: 30}}>Notif: {base64.decode(notifChar?.value)}</Text>
+      <Button title="Disconnect" onPress={() => disconnectDevice()}></Button>
+      <Button title="Check Connection" onPress={() => checkConnection()}></Button>
+      <Text style={{fontSize: 30}}>Write Msg: {writeMsg}</Text>
+      <Text style={{fontSize: 30}}>Read Msg: {readMsg}</Text>
+      <Text style={{fontSize: 30}}>Notif Msg: {base64.decode(String(notifChar?.value))}</Text>
+      <TextInput style={styles.input} onChangeText={(value) => setWriteMessage(value)} />
     </SafeAreaView>
   );
 };
@@ -152,6 +179,30 @@ const styles = StyleSheet.create({
   highlight: {
     fontWeight: '700',
   },
+  input: {
+    backgroundColor: '#dddddd',
+    margin: 10
+  },
+  buttonGreen: {
+    display: "flex",
+    height: 40,
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: "green",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  container: {
+    margin: 12,
+    flex: 1,
+    alignItems: "center"
+  },
+  container2: { 
+    flex: 1, 
+    padding: 16, 
+    paddingTop: 30, 
+    backgroundColor: '#fff' 
+  }
 });
 
 export default App;
