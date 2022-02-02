@@ -11,6 +11,7 @@
 import React, { useState } from 'react';
 import {
   Button,
+  LogBox,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -28,47 +29,38 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
+LogBox.ignoreAllLogs(); //Ignore all log notifications
+
 import { BleManager, Device } from 'react-native-ble-plx';
 
 const App = () => {
   
-  const [myDevice, setMyDevice] = useState<Device>(null);
+  const bleManager: BleManager = new BleManager();
+  const [myDevice, setMyDevice] = useState<Device>();
   
-  const bleManager = new BleManager();
 
   const scanDevices = (deviceName: String) => {
     bleManager.startDeviceScan(null, null, (error, device) => {
       console.log("Scanning...");
-      console.log(device.name);
-      
+
       if (error) {
         console.log(error.message);
         return;
       }
-      
-      if (device.name === deviceName) {
-        console.log("Device Found: ", device);
-        bleManager.stopDeviceScan();
-        setMyDevice(device);
-        return;
-      }
 
+      if(device) {
+        console.log("Device Name: ", device.name);
+      
+        if (device.name === deviceName) {
+          console.log("Device Found: ", device);
+          bleManager.stopDeviceScan();
+          setMyDevice(device);
+          return;
+        }
+      }
     });
   }
-
-  const connect = () => {
-    console.log("Device To Connect: ", myDevice.id);
-    myDevice.connect()
-      .then((device) => {
-        console.log("Connected: ", device.isConnected());
-        console.log(device);
-        return device.discoverAllServicesAndCharacteristics();
-      }).then((device) => {
-        console.log("services: ", device.serviceUUIDs);
-      }).catch((error) => {
-        console.log(error.message);
-      });
-  };
 
   const connectToDevice = () => {
     console.log("Device To Connect: ", myDevice.id);
@@ -77,13 +69,21 @@ const App = () => {
         console.log("Connected: ", device.isConnected());
         console.log(device);
         console.log("Discovering services and characteristics");
-        return device.discoverAllServicesAndCharacteristics();
-      }).then((device) => {
-        console.log("services: ", device.serviceUUIDs);
-      })
-      .catch((error) => {
+        bleManager.discoverAllServicesAndCharacteristicsForDevice(device.id)
+          .then((results) => { 
+            console.log(results);
+            bleManager.servicesForDevice(device.id)
+              .then((services) => {
+                console.log("Services: ", services);
+                console.log(services.length);
+                services.map((service, i) => {
+                  console.log(service.id, service.uuid);
+                });
+              });
+            });
+      }).catch((error) => {
         console.log(error.message);
-      })
+      });
   }
 
   return (
