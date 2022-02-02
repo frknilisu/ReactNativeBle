@@ -101,8 +101,18 @@ const App = () => {
     ).then(response => {
       console.log(response);
     }).catch((error) => {
-      console.log('error in writing data');
-      console.log(error);
+      console.log('error in writing data: ', error);
+    });
+  }
+
+  const readFromDevice = () => {
+    console.log("Is Connected: ", myDevice.isConnected());
+    bleManager.readCharacteristicForDevice(
+      myDevice.id, SERVICE_UUID, CHAR_UUID
+    ).then((char) => {
+      console.log(base64.decode(char.value));
+    }).catch((error) => {
+      console.log('error in reading data: ', error);
     });
   }
 
@@ -112,6 +122,7 @@ const App = () => {
       <Button title="Scan" onPress={() => scanDevices("MyBLEServer")} />
       <Button title="Connect" onPress={() => connectToDevice()} />
       <Button title="Write" onPress={() => writeToDevice("hello")} />
+      <Button title="Read" onPress={() => readFromDevice()} />
     </SafeAreaView>
   );
 };
