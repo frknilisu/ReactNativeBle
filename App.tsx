@@ -12,6 +12,7 @@ import React, { useState } from 'react';
 import {
   Button,
   LogBox,
+  PermissionsAndroid,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -47,7 +48,38 @@ const App = () => {
   const SERVICE_UUID = "a5b1194c-0d11-e0c0-50e5-c7db856efe37";
   const CHAR_UUID= "98234604-4499-8e00-79d3-44a0c5481593";
 
-  const scanDevices = (deviceName: String) => {
+  async function requestPermission() {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Permission Localisation Bluetooth',
+          message: 'Requirement for Bluetooth',
+          buttonNeutral: 'Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        }
+      );
+
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Location permission for bluetooth scanning granted');
+        return true;
+      } else if(granted === PermissionsAndroid.RESULTS.DENIED) {
+        console.log('Location permission for bluetooth scanning denied');
+        return false;
+      } else{
+        console.log('Location permission for bluetooth scanning revoked');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  const scanDevices = async (deviceName: String) => {
+    const permission = await requestPermission();
+    if (permission) {}
     bleManager.startDeviceScan(null, null, (error, device) => {
       console.log("Scanning...");
 
@@ -71,7 +103,7 @@ const App = () => {
 
   const connectToDevice = () => {
     console.log("Device To Connect: ", myDevice?.id);
-    bleManager.connectToDevice(myDevice?.id)
+    bleManager.connectToDevice(myDevice?.id, {autoConnect: true})
       .then((device) => {
         console.log("Connected: ", device.isConnected());
         console.log(device);
